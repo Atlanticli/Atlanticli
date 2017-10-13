@@ -1,0 +1,2 @@
+distinct 此关键字指示mysql返回不同的值  DISTINCT 字段
+SELECT prodname FROM products WHERE pro_price IS NULL 检测是否具有NULL的值

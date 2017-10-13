@@ -1,0 +1,98 @@
+第一个问题
+问：
+	执行php artisan migrate提示#1071 Specified key was too long; max key length is 767 bytes？
+答：
+	第一种方法   数据库配置文件发现了不同之处 config/database.php （laravel版本为5.4）：
+ 	将 config/database.php 改为
+		'charset' => 'utf8',
+            	'collation' => 'utf8_unicode_ci',
+第二种方法 （更倾向）
+app/Providers/AppServiceProvider.php
+use Illuminate\Support\Facades\Schema;
+public function boot()
+    {
+        Schema::defaultStringLength(191);
+    }
+
+
+
+
+
+第二个问题
+MySQL 5.5将字符集从utf8升级为utf8mb4
+
+升级原因
+
+MySQL默认的utf8只支持三字节字符，不支持Emoji表情符（四字节），如果有四字节的字符写入会报错。从MySQL 5.5开始，提供了utf8mb4，支持四字节的字符。
+许多使用iphone的用户来在填写昵称的时候会加入Emoji表情符，如果MySQL没有使用utf8mb4字符集，这样的昵称信息就无法写入。
+mysql> SHOW VARIABLES LIKE 'character_set%';
+mysql> SHOW VARIABLES LIKE 'collation%';
+修改配置文件。
+[client]  
+default-character-set = utf8mb4
+
+[mysql]  
+default-character-set = utf8mb4
+
+[mysqld]  
+character-set-client-handshake = FALSE
+character-set-server = utf8mb4
+collation-server = utf8mb4_general_ci
+init_connect='SET NAMES utf8mb4'
+
+
+1.修改了character_set_server参数，需要重启数据库
+2.使用高版本的JDBC
+
+ 
+JDBC版本
+普通中文
+苹果表情
+服务器utf8编码
+5.1.6    
+正常
+插入报错
+ 
+5.1.6  Query
+正常
+正常
+ 
+5.1.6  init_connect
+正常
+插入报错
+ 
+5.1.31
+正常
+插入报错
+ 
+5.1.31 Query
+正常
+正常
+ 
+5.1.31 init_connect
+正常
+插入报错
+服务器utf8mb4编码
+5.1.6
+乱码
+乱码
+ 
+5.1.6  Query
+乱码
+乱码
+ 
+5.1.6  init_connect
+乱码
+乱码
+ 
+5.1.31
+正常
+正常
+ 
+5.1.31 Query
+正常
+正常
+ 
+5.1.31 init_connect
+正常
+正常
